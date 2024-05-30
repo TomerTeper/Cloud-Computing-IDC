@@ -1,0 +1,7 @@
+name: Exercise-1-Parking-Lot
+runtime: nodejs
+description: Parking-Lot
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: ""

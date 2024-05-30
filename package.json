@@ -1,0 +1,13 @@
+{
+    "name": "exercise-1-parking-lot",
+    "main": "index.ts",
+    "devDependencies": {
+        "@types/node": "^18",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@pulumi/aws": "^6.37.1",
+        "@pulumi/awsx": "^2.10.0",
+        "@pulumi/pulumi": "^3.117.0"
+    }
+}

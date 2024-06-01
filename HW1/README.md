@@ -52,6 +52,8 @@ Before you begin, ensure you have the following installed:
 To deploy the project to AWS, run:
 
 ```sh
+$env:AWS_ACCESS_KEY_ID = "<YOUR_ACCESS_KEY_ID>"
+$env:AWS_SECRET_ACCESS_KEY = "<YOUR_SECRET_ACCESS_KEY>"
 pulumi up
 ```
 ## API Endpoints

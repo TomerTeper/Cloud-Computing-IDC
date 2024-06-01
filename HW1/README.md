@@ -61,7 +61,7 @@ pulumi up
 - URL: /entry
 - Method: POST
 - Parameters:
- - plate: The license plate of the vehicle.
+ -- plate: The license plate of the vehicle.
  - parkingLot: The ID of the parking lot.
 - Example:
 ```sh

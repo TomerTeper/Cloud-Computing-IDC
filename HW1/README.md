@@ -24,7 +24,7 @@ Before you begin, ensure you have the following installed:
 
     ```sh
     git clone <repository-url>
-    cd parking-lot-system
+    cd pulumi\HW1
     ```
 
 2. **Install dependencies:**

@@ -4,11 +4,16 @@ const { v4: uuidv4 } = require("uuid");
 const AWS = require("aws-sdk");
 const express = require("express");
 const port = process.env.PORT || 80;
+const HOST = '0.0.0.0';
 const app = express();
 const dynamoDb = new AWS.DynamoDB.DocumentClient({ region: "us-east-2" });
 
 // app.use(express.json());
-app.use(bodyParser.json(),cors())
+// app.use(bodyParser.json(),cors())
+
+app.get('/', (req, res) => {
+    res.send('Hello World from Pulumi');
+  });
 
 app.post("/registerUser", async (req, res) => {
   const userId = req.body.id;
@@ -359,7 +364,8 @@ app.get("/checkMessages", async (req, res) => {
   }
 });
 
-app.listen(port, () => console.log(`server is runing in ${port}`));
+// app.listen(port, () => console.log(`server is runing in ${port}`));
 
+app.listen(port, HOST);
 // const userId = req.query.id;
 //   const message = req.body.message;

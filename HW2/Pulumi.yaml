@@ -1,0 +1,7 @@
+name: messaging-system-backend-cloud
+runtime: nodejs
+description: A messaging system backend in the cloud
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: container-aws-typescript

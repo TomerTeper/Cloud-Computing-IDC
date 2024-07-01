@@ -1,0 +1,5 @@
+config:
+  aws:region: us-east-1
+  messaging-system-backend-cloud:containerPort: "80"
+  messaging-system-backend-cloud:cpu: "512"
+  messaging-system-backend-cloud:memory: "128"

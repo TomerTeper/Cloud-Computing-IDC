@@ -8,7 +8,7 @@ const HOST = '0.0.0.0';
 const app = express();
 const dynamoDb = new AWS.DynamoDB.DocumentClient({ region: "us-east-1" });
 
-// app.use(express.json());
+app.use(express.json());
 // app.use(bodyParser.json(),cors())
 
 app.get('/', (req, res) => {

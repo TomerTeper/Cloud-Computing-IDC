@@ -8,6 +8,12 @@ const HOST = '0.0.0.0';
 const app = express();
 const dynamoDb = new AWS.DynamoDB.DocumentClient({ region: "us-east-1" });
 
+const usersTableName = "<your-usersTableName>";
+const messagesTableName = "<your-messagesTableName>"
+const groupsTableName = "<your-groupsTableName>"
+const groupMessagesTableName = "<your-groupMessagesTableName>"
+
+
 app.use(express.json());
 // app.use(bodyParser.json(),cors())
 
@@ -23,7 +29,7 @@ app.post("/registerUser", async (req, res) => {
   }
 
   const params = {
-    TableName: "users",
+    TableName: usersTableName,
     Item: { userId, blockedUsers: [], groups: [] },
   };
 
@@ -46,9 +52,9 @@ app.post("/sendMessage", async (req, res) => {
 
   // Check if the receiver has blocked the sender
   const checkBlockedParams = {
-    TableName: "users",
+    TableName: usersTableName,
     Key: {
-      userId: receiverId,
+      userId: senderId,
     },
   };
 
@@ -57,7 +63,7 @@ app.post("/sendMessage", async (req, res) => {
 
     if (
       receiver.Item.blockedUsers &&
-      receiver.Item.blockedUsers.includes(senderId)
+      receiver.Item.blockedUsers.includes(receiverId)
     ) {
       return res
         .status(403)
@@ -68,12 +74,12 @@ app.post("/sendMessage", async (req, res) => {
     const timestamp = new Date().toISOString();
 
     const messageParams = {
-      TableName: "messages",
+      TableName: messagesTableName,
       Item: { senderId, receiverId, content, timestamp },
     };
 
     await dynamoDb.put(messageParams).promise();
-    res.status(201).json({ messageId });
+    res.status(201).json({ receiverId ,receiver });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: `Could not send message ${error}` });
@@ -90,10 +96,10 @@ app.post("/blockUser", async (req, res) => {
   }
 
   const params = {
-    TableName: "users",
+    TableName: usersTableName,
     Key: { userId },
     UpdateExpression:
-      "SET blockedUsers = list_append(blockedUsers, :blockUserId)",
+      `SET blockedUsers = list_append(blockedUsers, :blockUserId)`,
     ExpressionAttributeValues: {
       ":blockUserId": [blockUserId],
     },
@@ -121,7 +127,7 @@ app.post("/createGroup", async (req, res) => {
   const groupId = uuidv4();
 
   const groupParams = {
-    TableName: "groups",
+    TableName: groupsTableName,
     Item: {
       groupId,
       groupName,
@@ -136,7 +142,7 @@ app.post("/createGroup", async (req, res) => {
     // Update each user in the Users table to add the GroupID to their list of groups
     const updateUserPromises = members.map(async (userId) => {
       const updateParams = {
-        TableName: "users",
+        TableName: usersTableName,
         Key: { userId },
         UpdateExpression: "SET groups = list_append(groups, :groupId)",
         ExpressionAttributeValues: {
@@ -166,7 +172,7 @@ app.post("/removeUserFromGroup", async (req, res) => {
 
   // Remove the user from the group's member list
   const removeGroupParams = {
-    TableName: "groups",
+    TableName: groupsTableName,
     Key: { groupId },
     UpdateExpression: "DELETE members :userId",
     ExpressionAttributeValues: {
@@ -177,7 +183,7 @@ app.post("/removeUserFromGroup", async (req, res) => {
 
   // Remove the group from the user's list of groups
   const removeUserParams = {
-    TableName: "users",
+    TableName: usersTableName,
     Key: { userId },
     UpdateExpression: "DELETE groups :groupId",
     ExpressionAttributeValues: {
@@ -205,9 +211,9 @@ app.post("/addUserToGroup", async (req, res) => {
 
   // Add the user to the group's member list
   const addGroupParams = {
-    TableName: "groups",
+    TableName: groupsTableName,
     Key: { groupId },
-    UpdateExpression: "SET Members = list_append(members, :userId)",
+    UpdateExpression: "SET members = list_append(members, :userId)",
     ExpressionAttributeValues: {
       ":userId": [userId],
     },
@@ -216,7 +222,7 @@ app.post("/addUserToGroup", async (req, res) => {
 
   // Add the group to the user's list of groups
   const addUserParams = {
-    TableName: "users",
+    TableName: usersTableName,
     Key: { userId },
     UpdateExpression: "SET groups = list_append(groups, :groupId)",
     ExpressionAttributeValues: {
@@ -246,7 +252,7 @@ app.post("/sendMessageToGroup", async (req, res) => {
 
   // Fetch group members
   const groupParams = {
-    TableName: "groups",
+    TableName: groupsTableName,
     Key: { groupId },
   };
 
@@ -303,7 +309,7 @@ app.get("/checkMessages", async (req, res) => {
   try {
     // Query individual messages
     const individualMessagesParams = {
-      TableName: "messages",
+      TableName: messagesTableName,
       KeyConditionExpression: "receiverId = :receiverId",
       ExpressionAttributeValues: {
         ":receiverId": userId,
@@ -318,7 +324,7 @@ app.get("/checkMessages", async (req, res) => {
 
     // Query group memberships for the user
     const userParams = {
-      TableName: "users",
+      TableName: usersTableName,
       Key: { userId },
     };
 
@@ -332,7 +338,7 @@ app.get("/checkMessages", async (req, res) => {
     // Query group messages for each group the user is part of
     const groupMessagesPromises = groupIds.map((groupId) => {
       const groupMessagesParams = {
-        TableName: "groupMessages",
+        TableName: groupMessagesTableName,
         KeyConditionExpression: "groupID = :groupId",
         ExpressionAttributeValues: {
           ":groupId": groupId,

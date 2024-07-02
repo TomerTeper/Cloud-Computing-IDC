@@ -31,7 +31,7 @@ app.post("/registerUser", async (req, res) => {
     await dynamoDb.put(params).promise();
     res.status(201).json({ userId });
   } catch (error) {
-    res.status(500).json({ error: "Could not add user" });
+    res.status(500).json({ error: `Could not add user ${error}` });
   }
 });
 
@@ -76,7 +76,7 @@ app.post("/sendMessage", async (req, res) => {
     res.status(201).json({ messageId });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Could not send message" });
+    res.status(500).json({ error: `Could not send message ${error}` });
   }
 });
 
@@ -105,7 +105,7 @@ app.post("/blockUser", async (req, res) => {
     res.status(200).json({ message: "User blocked successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Could not block user" });
+    res.status(500).json({ error: `Could not block user ${error}` });
   }
 });
 
@@ -153,7 +153,7 @@ app.post("/createGroup", async (req, res) => {
     res.status(201).json({ groupId, groupName, members });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Could not create group" });
+    res.status(500).json({ error: `Could not create group ${error}` });
   }
 });
 
@@ -192,7 +192,7 @@ app.post("/removeUserFromGroup", async (req, res) => {
     res.status(200).json({ message: "User removed from group successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Could not remove user from group" });
+    res.status(500).json({ error: `Could not remove user from group ${error}` });
   }
 });
 
@@ -231,7 +231,7 @@ app.post("/addUserToGroup", async (req, res) => {
     res.status(200).json({ message: "User added to group successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Could not add user to group" });
+    res.status(500).json({ error: `Could not add user to group ${error}` });
   }
 });
 
@@ -286,7 +286,7 @@ app.post("/sendMessageToGroup", async (req, res) => {
     res.status(201).json({ message: "Message sent to group successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Could not send message to group" });
+    res.status(500).json({ error: `Could not send message to group ${error}` });
   }
 });
 
@@ -360,7 +360,7 @@ app.get("/checkMessages", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Could not retrieve messages" });
+    res.status(500).json({ error: `Could not retrieve messages ${error}` });
   }
 });
 

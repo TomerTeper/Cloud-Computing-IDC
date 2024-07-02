@@ -1,25 +1,24 @@
-const bodyParser = require('body-parser')
-const cors = require('cors')
+const bodyParser = require("body-parser");
+const cors = require("cors");
 const { v4: uuidv4 } = require("uuid");
 const AWS = require("aws-sdk");
 const express = require("express");
 const port = process.env.PORT || 80;
-const HOST = '0.0.0.0';
+const HOST = "0.0.0.0";
 const app = express();
 const dynamoDb = new AWS.DynamoDB.DocumentClient({ region: "us-east-1" });
 
-const usersTableName = "<your-usersTableName>";
-const messagesTableName = "<your-messagesTableName>"
-const groupsTableName = "<your-groupsTableName>"
-const groupMessagesTableName = "<your-groupMessagesTableName>"
-
+const usersTableName = "users-0a72c82";
+const messagesTableName = "messages-95a1f65";
+const groupsTableName = "groups-8e1620a";
+const groupMessagesTableName = "groupMessages-b80f93e";
 
 app.use(express.json());
 // app.use(bodyParser.json(),cors())
 
-app.get('/', (req, res) => {
-    res.send('Hello World from Pulumi');
-  });
+app.get("/", (req, res) => {
+  res.send("Hello World from Pulumi");
+});
 
 app.post("/registerUser", async (req, res) => {
   const userId = req.body.id;
@@ -79,7 +78,7 @@ app.post("/sendMessage", async (req, res) => {
     };
 
     await dynamoDb.put(messageParams).promise();
-    res.status(201).json({ receiverId ,receiver });
+    res.status(201).json({ receiverId, receiver });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: `Could not send message ${error}` });
@@ -98,8 +97,7 @@ app.post("/blockUser", async (req, res) => {
   const params = {
     TableName: usersTableName,
     Key: { userId },
-    UpdateExpression:
-      `SET blockedUsers = list_append(blockedUsers, :blockUserId)`,
+    UpdateExpression: `SET blockedUsers = list_append(blockedUsers, :blockUserId)`,
     ExpressionAttributeValues: {
       ":blockUserId": [blockUserId],
     },
@@ -124,12 +122,12 @@ app.post("/createGroup", async (req, res) => {
       .json({ error: "Group name and members are required" });
   }
 
-  const groupId = uuidv4();
+  const groupsId = uuidv4();
 
   const groupParams = {
     TableName: groupsTableName,
     Item: {
-      groupId,
+      groupsId,
       groupName,
       members,
     },
@@ -144,9 +142,9 @@ app.post("/createGroup", async (req, res) => {
       const updateParams = {
         TableName: usersTableName,
         Key: { userId },
-        UpdateExpression: "SET groups = list_append(groups, :groupId)",
+        UpdateExpression: "SET groups = list_append(groups, :groupsId)",
         ExpressionAttributeValues: {
-          ":groupId": [groupId],
+          ":groupsId": [groupsId],
         },
         ReturnValues: "UPDATED_NEW",
       };
@@ -156,7 +154,7 @@ app.post("/createGroup", async (req, res) => {
     // Wait for all update operations to complete
     await Promise.all(updateUserPromises);
 
-    res.status(201).json({ groupId, groupName, members });
+    res.status(201).json({ groupsId, groupName, members });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: `Could not create group ${error}` });
@@ -164,16 +162,16 @@ app.post("/createGroup", async (req, res) => {
 });
 
 app.post("/removeUserFromGroup", async (req, res) => {
-  const { groupId, userId } = req.body;
+  const { groupsId, userId } = req.body;
 
-  if (!groupId || !userId) {
+  if (!groupsId || !userId) {
     return res.status(400).json({ error: "Group ID and User ID are required" });
   }
 
   // Remove the user from the group's member list
   const removeGroupParams = {
     TableName: groupsTableName,
-    Key: { groupId },
+    Key: { groupsId },
     UpdateExpression: "DELETE members :userId",
     ExpressionAttributeValues: {
       ":userId": dynamoDb.createSet([userId]),
@@ -185,9 +183,9 @@ app.post("/removeUserFromGroup", async (req, res) => {
   const removeUserParams = {
     TableName: usersTableName,
     Key: { userId },
-    UpdateExpression: "DELETE groups :groupId",
+    UpdateExpression: "DELETE groups :groupsId",
     ExpressionAttributeValues: {
-      ":groupId": dynamoDb.createSet([groupId]),
+      ":groupsId": dynamoDb.createSet([groupsId]),
     },
     ReturnValues: "UPDATED_NEW",
   };
@@ -198,21 +196,23 @@ app.post("/removeUserFromGroup", async (req, res) => {
     res.status(200).json({ message: "User removed from group successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: `Could not remove user from group ${error}` });
+    res
+      .status(500)
+      .json({ error: `Could not remove user from group ${error}` });
   }
 });
 
 app.post("/addUserToGroup", async (req, res) => {
-  const { groupId, userId } = req.body;
+  const { groupsId, userId } = req.body;
 
-  if (!groupId || !userId) {
+  if (!groupsId || !userId) {
     return res.status(400).json({ error: "Group ID and User ID are required" });
   }
 
   // Add the user to the group's member list
   const addGroupParams = {
     TableName: groupsTableName,
-    Key: { groupId },
+    Key: { groupsId },
     UpdateExpression: "SET members = list_append(members, :userId)",
     ExpressionAttributeValues: {
       ":userId": [userId],
@@ -224,9 +224,9 @@ app.post("/addUserToGroup", async (req, res) => {
   const addUserParams = {
     TableName: usersTableName,
     Key: { userId },
-    UpdateExpression: "SET groups = list_append(groups, :groupId)",
+    UpdateExpression: "SET groups = list_append(groups, :groupsId)",
     ExpressionAttributeValues: {
-      ":groupId": [groupId],
+      ":groupsId": [groupsId],
     },
     ReturnValues: "UPDATED_NEW",
   };
@@ -242,9 +242,9 @@ app.post("/addUserToGroup", async (req, res) => {
 });
 
 app.post("/sendMessageToGroup", async (req, res) => {
-  const { groupId, senderId, content } = req.body;
+  const { groupsId, senderId, content } = req.body;
 
-  if (!groupId || !senderId || !content) {
+  if (!groupsId || !senderId || !content) {
     return res
       .status(400)
       .json({ error: "Group ID, Sender ID, and Content are required" });
@@ -253,7 +253,7 @@ app.post("/sendMessageToGroup", async (req, res) => {
   // Fetch group members
   const groupParams = {
     TableName: groupsTableName,
-    Key: { groupId },
+    Key: { groupsId },
   };
 
   try {
@@ -267,27 +267,39 @@ app.post("/sendMessageToGroup", async (req, res) => {
     const timestamp = new Date().toISOString();
 
     // Create a batch write request to insert the message for each member
-    const writeRequests = members.map((receiverId) => ({
-      PutRequest: {
-        Item: {
-          messageId,
-          groupId,
-          senderId,
-          receiverId,
-          content,
-          timestamp,
-        },
-      },
-    }));
-
-    // Batch write to the groupMessages table
-    const batchWriteParams = {
-      RequestItems: {
-        groupMessages: writeRequests,
+    // const writeRequests = uniqueMembers.map((receiverId) => ({
+    //   PutRequest: {
+    //     Item: {
+    //       messageId,
+    //       groupsId,
+    //       senderId,
+    //       receiverId,
+    //       content,
+    //       timestamp,
+    //     },
+    //   },
+    // }));
+    const messageParams = {
+      TableName: groupMessagesTableName,
+      Item: {
+        messageId,
+        members,
+        groupsId,
+        senderId,
+        // receiverId,
+        content,
+        timestamp
       },
     };
 
-    await dynamoDb.batchWrite(batchWriteParams).promise();
+    // // Batch write to the groupMessages table
+    // const batchWriteParams = {
+    //   RequestItems: {
+    //     [groupMessagesTableName]: writeRequests,
+    //   },
+    // };
+
+    await dynamoDb.put(messageParams).promise();
 
     res.status(201).json({ message: "Message sent to group successfully" });
   } catch (error) {
@@ -336,12 +348,12 @@ app.get("/checkMessages", async (req, res) => {
     const groupIds = userData.Item.groups;
 
     // Query group messages for each group the user is part of
-    const groupMessagesPromises = groupIds.map((groupId) => {
+    const groupMessagesPromises = groupIds.map((groupsId) => {
       const groupMessagesParams = {
         TableName: groupMessagesTableName,
-        KeyConditionExpression: "groupID = :groupId",
+        KeyConditionExpression: "groupsId = :groupsId",
         ExpressionAttributeValues: {
-          ":groupId": groupId,
+          ":groupsId": groupsId,
         },
         Limit: 50, // Limit the number of messages to 50
         ExclusiveStartKey: lastEvaluatedKey, // Start from the last evaluated key, if provided

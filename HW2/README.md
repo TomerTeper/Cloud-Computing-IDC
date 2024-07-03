@@ -48,6 +48,8 @@ The project uses the following AWS services:
     pulumi login
     pulumi stack init dev
     pulumi config set aws:region us-east-1
+    export AWS_ACCESS_KEY_ID=<YOUR_ACCESS_KEY_ID>
+    export AWS_SECRET_ACCESS_KEY=<YOUR_SECRET_ACCESS_KEY>
     ```
 
 4. Deploy the infrastructure:

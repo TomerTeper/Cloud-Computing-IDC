@@ -1,8 +1,6 @@
 
 # Cloud Computing Projects
 
-This repository contains two projects for a Cloud Computing course, both leveraging AWS Serverless technologies and Pulumi for infrastructure as code.
-
 ## Projects Overview
 
 ### HW1: Parking Lot Management System

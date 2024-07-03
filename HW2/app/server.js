@@ -438,9 +438,8 @@ app.get("/checkMessages", async (req, res) => {
 
     res.status(200).json({
       messages: allMessages,
-      lastEvaluatedKey:
-        individualMessages.LastEvaluatedKey ||
-        groupMessagesResults.LastEvaluatedKey,
+      individualLastEvaluatedKey: individualMessages.LastEvaluatedKey,
+      groupLastEvaluatedKey: groupMessagesResults.LastEvaluatedKey
     });
   } catch (error) {
     console.error(error);

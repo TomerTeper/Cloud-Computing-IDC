@@ -16,7 +16,6 @@ This project is a cloud-based messaging system backend built using AWS Serverles
 ## Architecture
 The project uses the following AWS services:
 - **Amazon DynamoDB:** NoSQL database to store user, messages, and group data.
-- **AWS API Gateway:** Entry point for all API requests.
 - **Amazon ECS Fargate:** To run containers without managing servers.
 - **AWS IAM:** To manage access and permissions for the application components.
 

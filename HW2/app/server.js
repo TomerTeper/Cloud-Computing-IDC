@@ -8,10 +8,10 @@ const HOST = "0.0.0.0";
 const app = express();
 const dynamoDb = new AWS.DynamoDB.DocumentClient({ region: "us-east-1" });
 
-const usersTableName = "users-0a72c82";
-const messagesTableName = "messages-95a1f65";
-const groupsTableName = "groups-8e1620a";
-const groupMessagesTableName = "groupMessages-b80f93e";
+const usersTableName = "<usersTableName>";
+const messagesTableName = "<messagesTableName>";
+const groupsTableName = "<groupsTableName>";
+const groupMessagesTableName = "<groupMessagesTableName>";
 
 app.use(express.json());
 // app.use(bodyParser.json(),cors())
@@ -53,7 +53,7 @@ app.post("/sendMessage", async (req, res) => {
   const checkBlockedParams = {
     TableName: usersTableName,
     Key: {
-      userId: senderId,
+      userId: receiverId,
     },
   };
 
@@ -62,7 +62,7 @@ app.post("/sendMessage", async (req, res) => {
 
     if (
       receiver.Item.blockedUsers &&
-      receiver.Item.blockedUsers.includes(receiverId)
+      receiver.Item.blockedUsers.includes(senderId)
     ) {
       return res
         .status(403)
@@ -78,7 +78,7 @@ app.post("/sendMessage", async (req, res) => {
     };
 
     await dynamoDb.put(messageParams).promise();
-    res.status(201).json({ receiverId, receiver });
+    res.status(201).json({ receiverId });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: `Could not send message ${error}` });
@@ -161,6 +161,48 @@ app.post("/createGroup", async (req, res) => {
   }
 });
 
+// todo: need to fix bug in DELETE UpdateExpression
+// app.post("/removeUserFromGroup", async (req, res) => {
+//   const { groupsId, userId } = req.body;
+
+//   if (!groupsId || !userId) {
+//     return res.status(400).json({ error: "Group ID and User ID are required" });
+//   }
+
+//   // Remove the user from the group's member list
+//   const removeGroupParams = {
+//     TableName: groupsTableName,
+//     Key: { groupsId },
+//     UpdateExpression: "DELETE members :userId",
+//     ExpressionAttributeValues: {
+//       ":userId": dynamoDb.createSet([userId]),
+//     },
+//     ReturnValues: "UPDATED_NEW",
+//   };
+
+//   // Remove the group from the user's list of groups
+//   const removeUserParams = {
+//     TableName: usersTableName,
+//     Key: { userId },
+//     UpdateExpression: "DELETE groups :groupsId",
+//     ExpressionAttributeValues: {
+//       ":groupsId": dynamoDb.createSet([groupsId]),
+//     },
+//     ReturnValues: "UPDATED_NEW",
+//   };
+
+//   try {
+//     await dynamoDb.update(removeGroupParams).promise();
+//     await dynamoDb.update(removeUserParams).promise();
+//     res.status(200).json({ message: "User removed from group successfully" });
+//   } catch (error) {
+//     console.error(error);
+//     res
+//       .status(500)
+//       .json({ error: `Could not remove user from group ${error}` });
+//   }
+// });
+
 app.post("/removeUserFromGroup", async (req, res) => {
   const { groupsId, userId } = req.body;
 
@@ -168,37 +210,61 @@ app.post("/removeUserFromGroup", async (req, res) => {
     return res.status(400).json({ error: "Group ID and User ID are required" });
   }
 
-  // Remove the user from the group's member list
-  const removeGroupParams = {
-    TableName: groupsTableName,
-    Key: { groupsId },
-    UpdateExpression: "DELETE members :userId",
-    ExpressionAttributeValues: {
-      ":userId": dynamoDb.createSet([userId]),
-    },
-    ReturnValues: "UPDATED_NEW",
-  };
-
-  // Remove the group from the user's list of groups
-  const removeUserParams = {
-    TableName: usersTableName,
-    Key: { userId },
-    UpdateExpression: "DELETE groups :groupsId",
-    ExpressionAttributeValues: {
-      ":groupsId": dynamoDb.createSet([groupsId]),
-    },
-    ReturnValues: "UPDATED_NEW",
-  };
-
   try {
-    await dynamoDb.update(removeGroupParams).promise();
-    await dynamoDb.update(removeUserParams).promise();
+    // Get the current members list of the group
+    const groupResult = await dynamoDb
+      .get({
+        TableName: groupsTableName,
+        Key: { groupsId },
+      })
+      .promise();
+
+    const members = groupResult.Item?.members || [];
+    const updatedMembers = members.filter((member) => member !== userId);
+
+    // Update the group's member list
+    const updateGroupParams = {
+      TableName: groupsTableName,
+      Key: { groupsId },
+      UpdateExpression: "SET members = :updatedMembers",
+      ExpressionAttributeValues: {
+        ":updatedMembers": updatedMembers,
+      },
+      ReturnValues: "UPDATED_NEW",
+    };
+
+    await dynamoDb.update(updateGroupParams).promise();
+
+    // Get the current groups list of the user
+    const userResult = await dynamoDb
+      .get({
+        TableName: usersTableName,
+        Key: { userId },
+      })
+      .promise();
+
+    const groups = userResult.Item?.groups || [];
+    const updatedGroups = groups.filter((group) => group !== groupsId);
+
+    // Update the user's groups list
+    const updateUserParams = {
+      TableName: usersTableName,
+      Key: { userId },
+      UpdateExpression: "SET groups = :updatedGroups",
+      ExpressionAttributeValues: {
+        ":updatedGroups": updatedGroups,
+      },
+      ReturnValues: "UPDATED_NEW",
+    };
+
+    await dynamoDb.update(updateUserParams).promise();
+
     res.status(200).json({ message: "User removed from group successfully" });
   } catch (error) {
     console.error(error);
     res
       .status(500)
-      .json({ error: `Could not remove user from group ${error}` });
+      .json({ error: `Could not remove user from group: ${error}` });
   }
 });
 
@@ -288,7 +354,7 @@ app.post("/sendMessageToGroup", async (req, res) => {
         senderId,
         // receiverId,
         content,
-        timestamp
+        timestamp,
       },
     };
 

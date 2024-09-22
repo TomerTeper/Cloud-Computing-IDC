@@ -40,6 +40,21 @@ A backend for a messaging system built using AWS Serverless technologies. It sup
 - `/addUserToGroup` - Add a user to a group.
 - `/checkMessages` - Check messages for a user.
 
----
+### Final Project: Traffic Control and Ticketing System
 
-This main README provides a brief overview of each project. For detailed instructions and information, please refer to the README files in the respective HW1 and HW2 directories.
+This cloud-based traffic control and ticketing system processes data from traffic cameras to monitor vehicles, identify speed limit violations, and file tickets automatically. The system is built with a focus on scalability, long-term sustainability, and cost efficiency using AWS and third-party services.
+
+**Key Technologies**:
+- **DynamoDB**: Stores traffic data (vehicle details, camera locations).
+- **S3**: Stores traffic camera images.
+- **Lambda**: Handles data extraction and ticket processing workflows.
+- **SQS**: Queue system for managing traffic data ingestion.
+- **AWS Location Service**: For map rendering and location-based queries.
+- **Carnet.ai**: A third-party car recognition service used for image processing.
+
+**Features**:
+- **Traffic Monitoring:** Aggregates data from traffic cameras and identifies vehicles.
+- **Automatic Ticket Filing:** Detects speed limit violations using camera data and files tickets.
+- **Alerts System:** Tracks vehicle locations and issues notifications for specific conditions.
+- **Query Service:** Provides APIs for querying traffic data based on various criteria (e.g., vehicle, location, time).
+
